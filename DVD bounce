@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <!-- スマホで表示サイズを固定するための設定 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DVD Bounce Site</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            touch-action: none; /* スマホのスクロールやズームを無効化 */
+        }
+        .logo {
+            position: absolute;
+            width: 80px;  /* スマホに合わせて少し小さめに */
+            height: 40px;
+            background-color: #ff0000;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 14px;
+            user-select: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+    function createLogo(x, y) {
+        const logo = document.createElement('div');
+        logo.className = 'logo';
+        logo.innerText = 'DVD';
+        document.body.appendChild(logo);
+
+        const rect = logo.getBoundingClientRect();
+        let posX = x - rect.width / 2;
+        let posY = y - rect.height / 2;
+
+        // スマホでも見栄えが良い速度に調整
+        let velX = (Math.random() > 0.5 ? 2 : -2);
+        let velY = (Math.random() > 0.5 ? 2 : -2);
+
+        function move() {
+            posX += velX;
+            posY += velY;
+
+            // 跳ね返り判定
+            if (posX <= 0 || posX + logo.offsetWidth >= window.innerWidth) {
+                velX *= -1;
+                changeColor(logo);
+            }
+            if (posY <= 0 || posY + logo.offsetHeight >= window.innerHeight) {
+                velY *= -1;
+                changeColor(logo);
+            }
+
+            logo.style.left = posX + 'px';
+            logo.style.top = posY + 'px';
+
+            requestAnimationFrame(move);
+        }
+
+        function changeColor(el) {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        move();
+    }
+
+    // PC（クリック）とスマホ（タップ）の両方に対応
+    const addLogo = (e) => {
+        // タッチイベントの場合は指の座標を取得、そうでない場合はマウスの座標
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        createLogo(clientX, clientY);
+    };
+
+    window.addEventListener('mousedown', addLogo);
+    window.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // ズームなどの標準動作を防止
+        addLogo(e);
+    }, { passive: false });
+</script>
+</body>
+</html>
