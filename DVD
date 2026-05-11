@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>DVD Bounce Site</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden; /* スクロールバーを消す */
+            height: 100vh;
+            width: 100vw;
+        }
+        .logo {
+            position: absolute;
+            width: 100px; /* ロゴの幅 */
+            height: 50px; /* ロゴの高さ */
+            background-color: #ff0000;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: sans-serif;
+            font-weight: bold;
+            user-select: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+    function createLogo(x, y) {
+        const logo = document.createElement('div');
+        logo.className = 'logo';
+        logo.innerText = 'DVD';
+        document.body.appendChild(logo);
+
+        // 初期の位置と速度
+        let posX = x - 50;
+        let posY = y - 25;
+        let velX = (Math.random() > 0.5 ? 3 : -3);
+        let velY = (Math.random() > 0.5 ? 3 : -3);
+
+        function move() {
+            posX += velX;
+            posY += velY;
+
+            // 画面端での跳ね返り判定
+            if (posX <= 0 || posX + logo.offsetWidth >= window.innerWidth) {
+                velX *= -1;
+                changeColor(logo);
+            }
+            if (posY <= 0 || posY + logo.offsetHeight >= window.innerHeight) {
+                velY *= -1;
+                changeColor(logo);
+            }
+
+            logo.style.left = posX + 'px';
+            logo.style.top = posY + 'px';
+
+            requestAnimationFrame(move);
+        }
+
+        function changeColor(el) {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        move();
+    }
+
+    // 画面をクリックした時にロゴを生成
+    window.addEventListener('click', (e) => {
+        createLogo(e.clientX, e.clientY);
+    });
+</script>
+</body>
+</html>
