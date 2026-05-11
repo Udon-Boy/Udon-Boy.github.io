@@ -2,20 +2,23 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <!-- スマホで表示サイズを固定するための設定 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DVD Bounce Site</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             background-color: #000;
-            overflow: hidden; /* スクロールバーを消す */
+            overflow: hidden;
             height: 100vh;
             width: 100vw;
+            touch-action: none; /* スマホのスクロールやズームを無効化 */
         }
         .logo {
             position: absolute;
-            width: 100px; /* ロゴの幅 */
-            height: 50px; /* ロゴの高さ */
+            width: 80px;  /* スマホに合わせて少し小さめに */
+            height: 40px;
             background-color: #ff0000;
             color: white;
             display: flex;
@@ -23,8 +26,9 @@
             justify-content: center;
             font-family: sans-serif;
             font-weight: bold;
+            font-size: 14px;
             user-select: none;
-            cursor: pointer;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -37,17 +41,19 @@
         logo.innerText = 'DVD';
         document.body.appendChild(logo);
 
-        // 初期の位置と速度
-        let posX = x - 50;
-        let posY = y - 25;
-        let velX = (Math.random() > 0.5 ? 3 : -3);
-        let velY = (Math.random() > 0.5 ? 3 : -3);
+        const rect = logo.getBoundingClientRect();
+        let posX = x - rect.width / 2;
+        let posY = y - rect.height / 2;
+
+        // スマホでも見栄えが良い速度に調整
+        let velX = (Math.random() > 0.5 ? 2 : -2);
+        let velY = (Math.random() > 0.5 ? 2 : -2);
 
         function move() {
             posX += velX;
             posY += velY;
 
-            // 画面端での跳ね返り判定
+            // 跳ね返り判定
             if (posX <= 0 || posX + logo.offsetWidth >= window.innerWidth) {
                 velX *= -1;
                 changeColor(logo);
@@ -71,13 +77,19 @@
         move();
     }
 
-    // 画面をクリックした時にロゴを生成
-    window.addEventListener('click', (e) => {
-        createLogo(e.clientX, e.clientY);
-    });
-     window.addEventListener('touchstart', (e) => {
-        createLogo(e.clientX, e.clientY);
-    });
+    // PC（クリック）とスマホ（タップ）の両方に対応
+    const addLogo = (e) => {
+        // タッチイベントの場合は指の座標を取得、そうでない場合はマウスの座標
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        createLogo(clientX, clientY);
+    };
+
+    window.addEventListener('mousedown', addLogo);
+    window.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // ズームなどの標準動作を防止
+        addLogo(e);
+    }, { passive: false });
 </script>
 </body>
 </html>
