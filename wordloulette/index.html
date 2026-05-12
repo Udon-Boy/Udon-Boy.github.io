@@ -66,90 +66,125 @@
     <button id="action-btn">ストップ！</button>
 
     <script>
-       const words = ["APPLE", "LEMON", "GRAPE", "PEACH", "MELON"];
+        const words = ["APPLE", "LEMON", "GRAPE", "PEACH", "MELON", "SMART", "DREAM"];
 let answer = words[Math.floor(Math.random() * words.length)];
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-let tileIndex = 0; // 今止める文字の場所
-let attemptCount = 0; // クリック合計回数
+
+let tileIndex = 0;      // 現在止めるタイル
+let letterIndex = 0;    // 現在の文字
+let attemptCount = 0;   // 合計クリック数
 let intervalId;
 
-// ルーレットを開始する関数
+// 1. ルーレットを開始する
 function startRoulette() {
     intervalId = setInterval(() => {
         if (tileIndex < 5) {
             const currentTile = document.getElementById("t" + tileIndex);
-            const randomLetter = letters[Math.floor(Math.random() * letters.length)];
-            currentTile.textContent = randomLetter;
+            letterIndex = (letterIndex + 1) % letters.length;
+            currentTile.textContent = letters[letterIndex];
         }
-    }, 100);
+    }, 150); 
 }
 
-// 最初の起動
-startRoulette();
-
+// 2. ボタンをクリックした時の処理
 document.getElementById("action-btn").addEventListener("click", () => {
     if (tileIndex < 5) {
         attemptCount++;
         const currentTile = document.getElementById("t" + tileIndex);
-        const guessedLetter = currentTile.textContent;
-
-        // --- 色判定 ---
-        if (guessedLetter === answer[tileIndex]) {
-            currentTile.className = "tile correct"; // 緑
-        } else if (answer.includes(guessedLetter)) {
-            currentTile.className = "tile present"; // 黄
-        } else {
-            currentTile.className = "tile absent";  // グレー
-        }
-
+        
+        // 枠を白くして「確定した」感を出す
+        currentTile.style.borderColor = "#ffffff";
+        
         tileIndex++;
+        letterIndex = 0; 
 
-        // 5文字目が止まった時
+        // 5文字すべて止まったら
         if (tileIndex === 5) {
-            clearInterval(intervalId); // 一旦止める
-            checkFinalResult();
+            clearInterval(intervalId); // ルーレット停止
+            document.getElementById("action-btn").disabled = true; // 連打禁止
+            startSequentialCheck(); // ★順番に判定へ
         }
     }
 });
 
-function checkFinalResult() {
+// 3. 【判定】1文字ずつ順番に色を変えていく
+function startSequentialCheck() {
+    let checkIdx = 0;
+
+    const timer = setInterval(() => {
+        const tile = document.getElementById("t" + checkIdx);
+        const guessedLetter = tile.textContent;
+
+        // 色の判定
+        if (guessedLetter === answer[checkIdx]) {
+            tile.className = "tile correct"; // 緑
+        } else if (answer.includes(guessedLetter)) {
+            tile.className = "tile present"; // 黄
+        } else {
+            tile.className = "tile absent";  // グレー
+        }
+
+        checkIdx++;
+
+        if (checkIdx === 5) {
+            clearInterval(timer);
+            // 全部塗り終わったら、一呼吸おいて最終結果へ
+            setTimeout(handleGameEnd, 1000);
+        }
+    }, 600); // 0.6秒ごとに次の色へ
+}
+
+// 4. 【最終判断】クリアか、最初からやり直しか
+function handleGameEnd() {
     const allCorrect = Array.from(document.querySelectorAll('.tile'))
                             .every(t => t.classList.contains('correct'));
 
     if (allCorrect) {
-        // 【完全正解】おめでとう表示
         showGameClear();
     } else {
-        // 【不正解あり】3秒後にルーレットを再開して、1文字目からやり直し
         const btn = document.getElementById("action-btn");
-        btn.disabled = true; // 連打防止
-        btn.textContent = "やり直し...";
+        btn.textContent = "残念！やり直し";
 
         setTimeout(() => {
-            // 正解していない（緑以外）タイルの色をリセットして再開
-            // ※「ヒント」として色を残したい場合は、ここを調整
+            resetTiles();
             tileIndex = 0; 
+            letterIndex = 0;
             btn.disabled = false;
             btn.textContent = "ストップ！";
-            startRoulette();
-        }, 1500); // 1.5秒だけ結果を見せてから再開
+            startRoulette(); // またルーレットを回す
+        }, 2000); 
     }
 }
 
+// タイルを初期状態に戻す
+function resetTiles() {
+    for (let i = 0; i < 5; i++) {
+        const tile = document.getElementById("t" + i);
+        tile.className = "tile";
+        tile.textContent = "A";
+        tile.style.borderColor = "#3a3a3c";
+    }
+}
+
+// ゲームクリア画面を表示
 function showGameClear() {
     const btn = document.getElementById("action-btn");
     btn.style.display = "none";
     
     const message = document.createElement("div");
+    message.style.marginTop = "20px";
     message.innerHTML = `
         <h2 style="color: #6aaa64;">🎉 CLEAR!</h2>
         <p>正解は <strong>${answer}</strong> でした！</p>
         <p>合計クリック数: <strong>${attemptCount}回</strong></p>
-        <button onclick="location.href='../index.html'">トップへ戻る</button>
-        <button onclick="location.reload()" style="margin-left:10px;">もう一度</button>
+        <button onclick="location.href='../index.html'" style="padding:10px;">トップへ戻る</button>
+        <button onclick="location.reload()" style="margin-left:10px; padding:10px;">もう一度</button>
     `;
     document.body.appendChild(message);
 }
+
+// 起動！
+startRoulette();
     </script>
 </body>
 </html>
