@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英単語ルーレットゲーム</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #121213; /* ダークモード風 */
+            color: white;
+        }
+
+        /* タイルが並ぶエリア */
+        .board {
+            display: flex;
+            gap: 10px;
+            margin-top: 50px;
+        }
+
+        /* 1文字分のタイル */
+        .tile {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #3a3a3c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* 状態別の色設定 */
+        .correct { background-color: #6aaa64; border-color: #6aaa64; color: white; } /* 緑 */
+        .present { background-color: #c9b458; border-color: #c9b458; color: white; } /* 黄 */
+        .absent  { background-color: #3a3a3c; border-color: #3a3a3c; color: white; } /* グレー */
+
+        button {
+            margin-top: 30px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            background-color: #818384;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Word Roulette</h1>
+    
+    <div class="board">
+        <div id="t0" class="tile">A</div>
+        <div id="t1" class="tile">A</div>
+        <div id="t2" class="tile">A</div>
+        <div id="t3" class="tile">A</div>
+        <div id="t4" class="tile">A</div>
+    </div>
+
+    <button id="action-btn">ストップ！</button>
+
+    <script>
+       const words = ["APPLE", "LEMON", "GRAPE", "PEACH", "MELON"];
+let answer = words[Math.floor(Math.random() * words.length)];
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+let tileIndex = 0; // 今止める文字の場所
+let attemptCount = 0; // クリック合計回数
+let intervalId;
+
+// ルーレットを開始する関数
+function startRoulette() {
+    intervalId = setInterval(() => {
+        if (tileIndex < 5) {
+            const currentTile = document.getElementById("t" + tileIndex);
+            const randomLetter = letters[Math.floor(Math.random() * letters.length)];
+            currentTile.textContent = randomLetter;
+        }
+    }, 100);
+}
+
+// 最初の起動
+startRoulette();
+
+document.getElementById("action-btn").addEventListener("click", () => {
+    if (tileIndex < 5) {
+        attemptCount++;
+        const currentTile = document.getElementById("t" + tileIndex);
+        const guessedLetter = currentTile.textContent;
+
+        // --- 色判定 ---
+        if (guessedLetter === answer[tileIndex]) {
+            currentTile.className = "tile correct"; // 緑
+        } else if (answer.includes(guessedLetter)) {
+            currentTile.className = "tile present"; // 黄
+        } else {
+            currentTile.className = "tile absent";  // グレー
+        }
+
+        tileIndex++;
+
+        // 5文字目が止まった時
+        if (tileIndex === 5) {
+            clearInterval(intervalId); // 一旦止める
+            checkFinalResult();
+        }
+    }
+});
+
+function checkFinalResult() {
+    const allCorrect = Array.from(document.querySelectorAll('.tile'))
+                            .every(t => t.classList.contains('correct'));
+
+    if (allCorrect) {
+        // 【完全正解】おめでとう表示
+        showGameClear();
+    } else {
+        // 【不正解あり】3秒後にルーレットを再開して、1文字目からやり直し
+        const btn = document.getElementById("action-btn");
+        btn.disabled = true; // 連打防止
+        btn.textContent = "やり直し...";
+
+        setTimeout(() => {
+            // 正解していない（緑以外）タイルの色をリセットして再開
+            // ※「ヒント」として色を残したい場合は、ここを調整
+            tileIndex = 0; 
+            btn.disabled = false;
+            btn.textContent = "ストップ！";
+            startRoulette();
+        }, 1500); // 1.5秒だけ結果を見せてから再開
+    }
+}
+
+function showGameClear() {
+    const btn = document.getElementById("action-btn");
+    btn.style.display = "none";
+    
+    const message = document.createElement("div");
+    message.innerHTML = `
+        <h2 style="color: #6aaa64;">🎉 CLEAR!</h2>
+        <p>正解は <strong>${answer}</strong> でした！</p>
+        <p>合計クリック数: <strong>${attemptCount}回</strong></p>
+        <button onclick="location.href='../index.html'">トップへ戻る</button>
+        <button onclick="location.reload()" style="margin-left:10px;">もう一度</button>
+    `;
+    document.body.appendChild(message);
+}
+    </script>
+</body>
+</html>
